@@ -104,9 +104,19 @@ class Sprite(pygame.sprite.Sprite):
     def update(self):
         """
         The sprite will update itself using the strategy pattern stated in its instantiation. 
+
+        Updating basically just means that:
+            1)  The sprite will move up, down, left or right. This is mainly seen in the names. 
+                The sprites can move linearly, in a sine wave, upwards, downwards, or even through player input.
+            2)  The sprites will be animated. Because we are dealing with 2D animation, we made it so that the each 
+                change of frame is done incrementally through a function.
+        Thus, the update method will have to deal with these two roles.
+
+        A strategy then is just the different types of way it can deal with its roles.
+        For example, movement can be described by a line; a sine wave; an indepence between horizontal and vertical velocities; a player's input; and so on and so forth.
         """
 
-        # This is where composition is used. The 
+        # This is where the Strategy Design Pattern is used. 
         self.rect.topleft = self.strategy_pattern.move()
         self.image = self.images[self.strategy_pattern.change_index_frames()]
 
@@ -132,7 +142,7 @@ class Player(Sprite):
         return indices
     
     def append_images(self):  
-        # Append the frames to self.images
+        """Append the images to the list self.images"""
         for i in self.create_indices():
             self.images.append(
                 pygame.image.load(f'/Users/jfv/Desktop/Serpent Sprint/Graphics/{self.name_image}/{self.name_image}{str(i)}.png').convert_alpha())
@@ -161,6 +171,7 @@ class UpdatingStrategy(ABC):
         self.rect.topleft = (self.location_x, self.location_y)
     
     def change_index_frames(self):
+        """Change the indices so that there is animation in the sprite"""
         self.index += self.framespeed
         
         # To loop the code. If self.index is greater than the length of self.images, the animation must loop
@@ -170,8 +181,11 @@ class UpdatingStrategy(ABC):
         return int(self.index)
 
     def reappear(self):
-        # I learned today that since the classes 'LinearUpdating' and 'NonPlayableSprite' are not the same. 
-        # LinearUpdating does not inheir the NonPlayableSprite, so even if the variables have the same name, the SCOPE OF EACH VARIABLE IS SO DIFFERENT.
+        """
+        We learned today that since the classes 'LinearUpdating' and 'NonPlayableSprite' are not the same. 
+        LinearUpdating does not inherit the variables of the NonPlayableSprite, so even if the variables have the same name, 
+        the SCOPE OF EACH VARIABLE IS SO DIFFERENT.
+        """
         
         # If the image crosses the left side of the border, reset it to be back at the right
         if self.location_x <= -self.images[0].get_rect().width:
@@ -211,10 +225,12 @@ class UpdatingStrategy(ABC):
         """
         Moves and updates the sprite. Since UpdatingStrategy is just an interface, there is no concrete implementation yet.
         """
-        
         pass
 
 class PlayerUpdating(UpdatingStrategy):
+    """
+    Movement is handled by the player's input.
+    """
     def __init__(self, images, location_x, location_y, rect, framespeed, velocity, number_frames, is_facing_left):
         super().__init__(images, location_x, location_y, rect, framespeed, velocity, number_frames, is_facing_left)
         self.is_right = not self.is_facing_left
@@ -258,6 +274,7 @@ class PlayerUpdating(UpdatingStrategy):
         return int(self.index)
 
 class LinearUpdating(UpdatingStrategy):
+    """Movement of the sprite can be described by a line"""
     def move(self):
         self.location_x -= self.velocity
         self.rect.topleft = (self.location_x, self.location_y)
@@ -300,6 +317,7 @@ class BirdUpdating(UpdatingStrategy):
         return int(self.index)
 
 class SinoidUpdating(UpdatingStrategy):
+    """Movement of a sprite can be described as a sine wave."""
     def move(self):
         change_x = -self.velocity
         change_y = (self.velocity) * math.sin((math.pi * self.location_x)/(40 * self.velocity))
@@ -325,6 +343,11 @@ class SinoidUpdating(UpdatingStrategy):
             self.location_y = random_height
 
 class UpwardsUpdating(UpdatingStrategy):
+    """
+    The velocities in the horizontal and vertical direction will most likely be different unless stated by the instance variable, 'velocity'.
+    It may be described similarly to free falling with horizontal and vertical components, 
+    but there is no gravity since vertical velocity is constant
+    """
     def move(self):
         self.location_x -= self.velocity
         self.location_y -= 2
@@ -333,14 +356,15 @@ class UpwardsUpdating(UpdatingStrategy):
         return self.rect.topleft
 
 class DownwardsUpdating(UpdatingStrategy):
+    """
+    The movement is similar to UpwardsUpdating.
+    """
     def move(self):
         self.location_x -= self.velocity
         self.location_y += 2
         self.rect.topleft = [self.location_x, self.location_y]
         self.reappear()
         return self.rect.topleft
-
-
 
 if __name__ == "__main__":    
     game = Settings.get_settings()
@@ -387,7 +411,7 @@ if __name__ == "__main__":
                    velocity = 5)
     julian.rescale_images(100, 100)
     
-    letterbird = Player(name_image='letterbirdflap',
+    letterbird = Player(name_image='LetterBird',
                         number_frames=7,
                         location_x=200,
                         location_y=200,
