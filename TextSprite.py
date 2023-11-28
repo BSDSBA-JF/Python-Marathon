@@ -32,58 +32,49 @@ class TextSprite(pygame.sprite.Sprite):
         blit_text(self): Displays the text in any location
         update(): The text sprites will not move, so the method is just passing.
     """
-
-    def __init__(self, name_image, location_x, location_y):
+    
+    def __init__(self, name_image, location_x, location_y, groups):
         """
         Constructor creates the TextSprite objects based on the text.
         """
 
         # Initialize the text, location, font, and surface
-        super().__init__()
-        self.text = name_image
+        super().__init__(groups)
+        pygame.font.init()
+
+        self.name_image = name_image
         self.location_x = location_x
         self.location_y = location_y
         self.font = pygame.font.Font('/Users/jfv/Desktop/Python Marathon/Graphics/Pokemon_GB.ttf', 30)
-        self.surface = self.font.render(self.text, False, 'black')
+        self.image = self.font.render(self.name_image, False, 'black')
         
-        # Get the coordinate if the sprite wants to be placed in the middle
-        width_game = Settings.get_settings().width_screen
-        width_surface = self.surface.get_width()
-        self.middle_x = (width_game - width_surface) // 2
-
         # Get the rectangle
-        self.rect = self.surface.get_rect(midleft = (self.middle_x, location_y))
+        self.rect = self.image.get_rect(topleft = (self.location_x, self.location_y))
+        self.background_rect = pygame.Rect(self.location_x, self.location_y, self.image.get_width(), self.image.get_height())
+
+    def update(self):
+        #pygame.draw.rect(Settings.get_settings().screen, (0, 0, 0), self.background_rect)
+        self.rect.topleft
+        self.image
     
-    def blit_text_middle(self):
-        """
-        Blits/Displays the text in the middle of the game screen
-        """
-
-        screen = Settings.get_settings().screen
-        screen.blit(self.surface, self.rect)
-
-    def blit_text(self):
-        """
-        Blits/Displays the text anywhere based on the parameters given
-        """
-
-        screen = Settings.get_settings().screen
-        self.rect.midleft = (self.location_x, self.location_y)
-        screen.blit(self.surface, self.rect)
-    
+    def blit_rect(self):
+        Settings.get_settings().screen.blit(self.background_rect)
 
 if __name__ == "__main__":
     game = Settings.get_settings()
     game.start_game()
-
+    
+    obstaclesprites = pygame.sprite.Group()
     text_sprite_1 = TextSprite(
         name_image = 'Text Sprite 1', 
         location_x = 100, 
-        location_y = 100)
+        location_y = 100,
+        groups = (obstaclesprites))
     
     running = True
     while running:
         game.make_basic_loop()
 
         game.screen.fill(game.background_color)
-        text_sprite_1.blit_text_middle()
+        obstaclesprites.draw(game.screen)
+        obstaclesprites.update()
