@@ -37,10 +37,16 @@ class Settings():
         Returns an instance of the Settings class
         """
         if Settings.__instance is None:
-            Settings.__instance  = Settings(1120, 700, (255, 255, 255), 30)
+            Settings.__instance  = Settings(width_screen = 1120, 
+                                            height_screen = 700, 
+                                            background_color = (255, 255, 255),
+                                            score = 0, 
+                                            fps = 30,
+                                            name = 'Jeffrell',
+                                            mode = 'Easy')
         return Settings.__instance
     
-    def __init__(self, width_screen, height_screen, background_color, fps):
+    def __init__(self, width_screen, height_screen, background_color, score, fps, name, mode):
         """
         Constructor creates the Settings object based on the width and height of the screen, the background color, and the frames-per-second (fps) of the game.
         """
@@ -52,8 +58,13 @@ class Settings():
         self.height_screen = height_screen
         self.background_color = background_color
         self.screen = pygame.display.set_mode((self.width_screen, self.height_screen))
+        self.surface = pygame.Surface((width_screen, height_screen), pygame.SRCALPHA)
+        self.score = score
         self.fps = fps
+        self.name = name
+        self.mode = mode
         self.clock = pygame.time.Clock()
+        self.background_image = pygame.image.load("/Users/jfv/Desktop/Serpent Sprint/Graphics/Background.png").convert()
     
     def start_game(self):
         """
@@ -76,7 +87,21 @@ class Settings():
                 pygame.quit()
                 sys.exit()
         
-        self.screen.fill(self.background_color)
+        self.screen.blit(self.background_image, (0, 0))
+    
+    def update_csv(self):
+        import csv
+        import os
+
+        does_file_exists = os.path.isfile('PlayerScores.csv')
+
+        with open("PlayerScores.csv", "a") as file:
+            writer = csv.writer(file)
+
+            if not does_file_exists:
+                writer.writerow(['Name','Score', 'Mode'])
+
+            writer.writerow([self.name, self.score, self.mode])
     
 # This is to test out if the Settings class works as expected.
 if __name__ == "__main__":
@@ -85,10 +110,4 @@ if __name__ == "__main__":
     
     running = True
     while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-
-        game.screen.fill(game.background_color)
-
-        pygame.display.flip()
+        game.make_basic_loop()
