@@ -21,9 +21,10 @@ from abc import ABC, abstractmethod
 import pygame
 import math
 from Settings import Settings
+from TextSprite import TextSprite
 import random
 
-class Sprite(pygame.sprite.Sprite):
+class Sprite(ABC, pygame.sprite.Sprite):
     def __init__(self, name_image, number_frames, location_x, location_y, strategy_pattern, groups, velocity = 1, is_facing_left = True, framespeed = 0.02):
         """
         The constructor method will initialize the following variables:
@@ -113,7 +114,8 @@ class Sprite(pygame.sprite.Sprite):
         Thus, the update method will have to deal with these two roles.
 
         A strategy then is just the different types of way it can deal with its roles.
-        For example, movement can be described by a line; a sine wave; an indepence between horizontal and vertical velocities; a player's input; and so on and so forth.
+        For example, movement can be described by a line; a sine wave; an indepence between horizontal and vertical velocities; 
+        a player's input; and so on and so forth.
         """
 
         # This is where the Strategy Design Pattern is used. 
@@ -121,6 +123,11 @@ class Sprite(pygame.sprite.Sprite):
         self.image = self.images[self.strategy_pattern.change_index_frames()]
 
 class Player(Sprite):
+    def __init__(self, name_image, number_frames, location_x, location_y, strategy_pattern, groups, velocity = 1, is_facing_left = True, framespeed = 0.02):
+        super().__init__(name_image, number_frames, location_x, location_y, strategy_pattern, groups, velocity, is_facing_left, framespeed)
+        self.health = 3
+        self.score = 0
+        
     def create_indices(self):
         """create_images() is a helper method that will append a list of images so that sprite can have a loopable animation with its frames."""
 
@@ -146,6 +153,9 @@ class Player(Sprite):
         for i in self.create_indices():
             self.images.append(
                 pygame.image.load(f'/Users/jfv/Desktop/Serpent Sprint/Graphics/{self.name_image}/{self.name_image}{str(i)}.png').convert_alpha())
+
+class Obstalce(Sprite):
+    pass
 
 # Below are Updating Strategies.
 class UpdatingStrategy(ABC):
@@ -193,6 +203,7 @@ class UpdatingStrategy(ABC):
             self.rect.topleft = (Settings.get_settings().width_screen, random_height)
             self.location_x = self.rect.topleft[0]
             self.location_y = self.rect.topleft[1]
+            Settings.get_settings().score += 1
             #print('first case worked', self.rect.topleft)
 
         
@@ -202,6 +213,7 @@ class UpdatingStrategy(ABC):
             self.rect.topleft = (-self.images[0].get_rect().width, random_height)
             self.location_x = self.rect.topleft[0]
             self.location_y = self.rect.topleft[1]
+            Settings.get_settings().score += 1
             #print('second case worked', self.rect.topleft)
         
         # If the image crosses the top border, reset it at the lower bottom
@@ -210,6 +222,7 @@ class UpdatingStrategy(ABC):
             self.rect.topleft = (Settings.get_settings().width_screen, random_height)
             self.location_x = self.rect.topleft[0]
             self.location_y = self.rect.topleft[1]
+            Settings.get_settings().score += 1
             #print('third case worked', self.rect.topleft)
 
         # If the image crosses the bottom border, reset it at the top 
@@ -218,7 +231,8 @@ class UpdatingStrategy(ABC):
             self.rect.topleft = (Settings.get_settings().width_screen, random_height)
             self.location_x = self.rect.topleft[0]
             self.location_y = self.rect.topleft[1]
-            print('fourth case worked', random_height)
+            Settings.get_settings().score += 1
+            #print('fourth case worked', random_height)
 
     @abstractmethod
     def move(self):
@@ -366,9 +380,16 @@ class DownwardsUpdating(UpdatingStrategy):
         self.reappear()
         return self.rect.topleft
 
+
 if __name__ == "__main__":    
     game = Settings.get_settings()
-    mvg_imgs = pygame.sprite.Group()
+    obstaclesprites = pygame.sprite.Group()
+    textsprites = pygame.sprite.Group()
+    allsprites = pygame.sprite.Group()
+
+    def draw_pause():
+        pygame.draw.rect(game.surface, (128, 128, 128, 150), [0, 0, Settings.get_settings().width_screen, Settings.get_settings().height_screen ])
+        game.screen.blit(game.surface, (0, 0) )
 
     # These are the sprites that will be displayed on the screen.
     python_sin = Sprite(name_image = 'python', 
@@ -376,7 +397,7 @@ if __name__ == "__main__":
                     location_x = 100,
                     location_y = 400, 
                     strategy_pattern = SinoidUpdating, 
-                    groups = (mvg_imgs), 
+                    groups = (obstaclesprites, allsprites), 
                     velocity = 3,
                     is_facing_left = False, 
                     framespeed = 0.02)
@@ -387,36 +408,36 @@ if __name__ == "__main__":
                     location_x = 400,
                     location_y = 600, 
                     strategy_pattern = PlayerUpdating, 
-                    groups = (mvg_imgs), 
+                    groups = (allsprites),
                     velocity = 3,
                     is_facing_left = False, 
                     framespeed = 0.1)
-    chick.rescale_images(100, 100)
+    chick.rescale_images(120, 120)
 
-    emman = Sprite(name_image = 'Emman',
-                   number_frames=1,
+    chick2 = Sprite(name_image = 'Chick',
+                   number_frames = 3,
                    location_x = 400,
                    location_y = 0, 
                    strategy_pattern = UpwardsUpdating, 
-                   groups = (mvg_imgs), 
+                   groups = (obstaclesprites, allsprites), 
                    velocity = 5)
-    emman.rescale_images(100, 100)
+    chick2.rescale_images(100, 100)
 
-    julian = Sprite(name_image = 'Julian',
+    chick3 = Sprite(name_image = 'Chick',
                    number_frames=1,
                    location_x = 400,
                    location_y = 0, 
                    strategy_pattern = DownwardsUpdating, 
-                   groups = (mvg_imgs), 
+                   groups = (obstaclesprites, allsprites), 
                    velocity = 5)
-    julian.rescale_images(100, 100)
+    chick3.rescale_images(100, 100)
     
-    letterbird = Player(name_image='LetterBird',
+    letterbird = Sprite(name_image='LetterBird',
                         number_frames=7,
                         location_x=200,
                         location_y=200,
-                        strategy_pattern=PlayerUpdating,
-                        groups=(mvg_imgs),
+                        strategy_pattern=BirdUpdating,
+                        groups=(obstaclesprites, allsprites),
                         framespeed = 0.1,
                         velocity=5)
     
@@ -425,15 +446,74 @@ if __name__ == "__main__":
                     location_x = 1200,
                     location_y = 400,
                     strategy_pattern = LinearUpdating, 
-                    groups = (mvg_imgs),
+                    groups = (obstaclesprites, allsprites),
                     velocity = 3,
                     framespeed=0.02)
     python.rescale_images(100, 100)
 
-    running = True
-    while running:
-        game.make_basic_loop()
+    score = TextSprite(name_image = f'Score {game.score}', 
+                        location_x = 0, 
+                        location_y = 0,
+                        groups = (textsprites, allsprites))
+    
+    health = TextSprite(name_image = f'Health: {chick.health}', 
+                        location_x = 0, 
+                        location_y = 20 + score.rect.height,
+                        groups = (textsprites, allsprites)) 
 
-        mvg_imgs.draw(game.screen)
-        #print(julian.rect.topleft)
-        mvg_imgs.update()
+    is_paused = False
+    running = True
+
+    while running:
+        import sys
+        pygame.display.update()
+    
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    if is_paused:
+                        is_paused = False
+                        print('f')
+                    else:
+                        is_paused = True
+                        print('t')
+            
+        game.screen.blit(Settings.get_settings().background_image, (0, 0))
+    
+        obstaclesprites.draw(game.screen)
+        allsprites.draw(game.screen)
+        textsprites.draw(game.screen)
+        
+        if not is_paused:
+            obstaclesprites.update()
+            textsprites.update()
+            allsprites.update()
+            
+        if is_paused:    
+            draw_pause()
+
+
+        # Use the function of spritecollide where it checks if the player object has collided with any of the Obstacle sprites
+        collision_obstacles = pygame.sprite.spritecollide(chick, obstaclesprites, True)
+        collision_text = pygame.sprite.spritecollide(chick, textsprites, False)
+        
+        # Track the deleted sprites
+        #deleted_sprites = [enemy for enemy in obstaclesprites if enemy not in collision_obstacles]
+
+        score.name_image = f'Score: {game.score}'
+        score.image = score.font.render(score.name_image, False, 'black')
+
+        if collision_obstacles:
+            #print("Player collided with an enemy!")
+            chick.health -= 1
+            health.name_image = f'Health: {chick.health}'
+            health.image = health.font.render(health.name_image, False, 'black')
+        
+        if chick.health == 0:
+            #running = False
+            game.update_csv()
+            running=False
+    
