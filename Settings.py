@@ -42,7 +42,7 @@ class Settings():
                                             background_color = (255, 255, 255),
                                             score = 0, 
                                             fps = 30,
-                                            name = 'Jeffrell',
+                                            name = '',
                                             mode = 'Easy')
         return Settings.__instance
     
@@ -64,6 +64,8 @@ class Settings():
         self.name = name
         self.mode = mode
         self.clock = pygame.time.Clock()
+        pygame.font.init()
+        self.font = pygame.font.Font('/Users/jfv/Desktop/Python Marathon/Graphics/Pokemon_GB.ttf', 30)
         self.background_image = pygame.image.load("/Users/jfv/Desktop/Serpent Sprint/Graphics/Background.png").convert()
     
     def start_game(self):
