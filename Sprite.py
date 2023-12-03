@@ -5,9 +5,9 @@ This module focuses on the Sprite Class. It utilizes the Strategy design pattern
 Moreover, it has a subclass, PlayableSprite. 
 By the name, instances of this class will focus on sprites such as the Text, PowerUp, Serpent, Bird, and Rope.
 
-Creator: John Francis Y. Viray and Bianca M. Manatad
+Creator: John Francis Y. Viray, Bianca M. Manatad, and Caitlin Elaine L. Sebastian
 
-HIII BIANCSSS!!! Dapat mabasa mo na 'to pagkatapos sa all-upper case ko. This is for you po and writing our paper orz
+HIII BIANCSSS AND LINDSEY!!! Dapat mabasa mo na 'to pagkatapos sa all-upper case ko. This is for yall po and writing our paper orz
 There are four classes made by Pygame. They are: Surface, Rectangle, Sprite, and Group. I'll use the 'Mona Lisa' as an analogy.
 Think of the Surface class as the artpiece itself. It contains the actual images of our sprites.
 The Rectangle class is the canvas of the artpiece. Rectangles are mainly used so that you can move the sprites around. 
@@ -24,7 +24,7 @@ from Settings import Settings
 from TextSprite import TextSprite
 import random
 
-class Sprite(ABC, pygame.sprite.Sprite):
+class CharacterSprite(ABC, pygame.sprite.Sprite):
     def __init__(self, name_image, number_frames, location_x, location_y, strategy_pattern, groups, velocity = 1, is_facing_left = True, framespeed = 0.02):
         """
         The constructor method will initialize the following variables:
@@ -45,7 +45,7 @@ class Sprite(ABC, pygame.sprite.Sprite):
             rect (Rectangle): A rectangle where all of the positions of the images will be determined
         """
 
-        super(Sprite, self).__init__(groups)
+        super(CharacterSprite, self).__init__(groups)
         self.name_image = name_image
         self.number_frames = number_frames
         self.location_x = location_x
@@ -84,13 +84,19 @@ class Sprite(ABC, pygame.sprite.Sprite):
             self.images.append(
                 pygame.image.load(f'/Users/jfv/Desktop/Serpent Sprint/Graphics/{self.name_image}/{self.name_image}{str(i)}.png').convert_alpha())
             
-    def rescale_images(self, new_width, new_height):
-        """rescale_images() is a helper method that will rescale a list of images so that sprite can fit inside the game screen."""
+    def rescale_percentage(self, percentage):
+        """
+        rescale_percentage() is a helper method that will rescale a list of images so that sprite can fit inside the game screen.
+        Because the images are usually larger than needed, it is more often that they will be sized down.
+        
+        Args:
+            percentage (int) : The percent decrease to the new file. For example, if you want to decrease the image by 99%, you put rescale_percentage(0.99)
+        """
         for index in range(len(self.images)):
+            new_width = (self.images[index].get_rect().width) * (1 - percentage)
+            new_height = (self.images[index].get_rect().height) * (1 - percentage)
             self.images[index] = pygame.transform.scale(self.images[index], (new_width, new_height))
         
-        # The instance variables of the UpdatingStrategy class is not connected with the instance variables of the Sprite class. 
-        # As such, we need to update both the rectangles of the UpdatingStrategy and Sprite class.
         self.rect.width = new_width
         self.rect.height = new_height
         self.strategy_pattern.rect.width = self.rect.width
@@ -102,27 +108,11 @@ class Sprite(ABC, pygame.sprite.Sprite):
         #for index in range(len(self.images)):
             #self.images[index] = pygame.transform.flip(self.images[index], flip_x=1, flip_y=0)
 
+    @abstractmethod
     def update(self):
-        """
-        The sprite will update itself using the strategy pattern stated in its instantiation. 
+        pass
 
-        Updating basically just means that:
-            1)  The sprite will move up, down, left or right. This is mainly seen in the names. 
-                The sprites can move linearly, in a sine wave, upwards, downwards, or even through player input.
-            2)  The sprites will be animated. Because we are dealing with 2D animation, we made it so that the each 
-                change of frame is done incrementally through a function.
-        Thus, the update method will have to deal with these two roles.
-
-        A strategy then is just the different types of way it can deal with its roles.
-        For example, movement can be described by a line; a sine wave; an indepence between horizontal and vertical velocities; 
-        a player's input; and so on and so forth.
-        """
-
-        # This is where the Strategy Design Pattern is used. 
-        self.rect.topleft = self.strategy_pattern.move()
-        self.image = self.images[self.strategy_pattern.change_index_frames()]
-
-class Player(Sprite):
+class PlayerSprite(CharacterSprite):
     def __init__(self, name_image, number_frames, location_x, location_y, strategy_pattern, groups, velocity = 1, is_facing_left = True, framespeed = 0.02):
         super().__init__(name_image, number_frames, location_x, location_y, strategy_pattern, groups, velocity, is_facing_left, framespeed)
         self.health = 3
@@ -153,9 +143,30 @@ class Player(Sprite):
         for i in self.create_indices():
             self.images.append(
                 pygame.image.load(f'/Users/jfv/Desktop/Serpent Sprint/Graphics/{self.name_image}/{self.name_image}{str(i)}.png').convert_alpha())
+    
+    def update(self):
+        """
+        The sprite will update itself using the strategy pattern stated in its instantiation. 
 
-class Obstalce(Sprite):
-    pass
+        Updating basically just means that:
+            1)  The sprite will move up, down, left or right. This is mainly seen in the names. 
+                The sprites can move linearly, in a sine wave, upwards, downwards, or even through player input.
+            2)  The sprites will be animated. Because we are dealing with 2D animation, we made it so that the each 
+                change of frame is done incrementally through a function.
+        Thus, the update method will have to deal with these two roles.
+
+        A strategy then is just the different types of way it can deal with its roles.
+        For example, movement can be described by a line; a sine wave; an indepence between horizontal and vertical velocities; 
+        a player's input; and so on and so forth.
+        """
+        # This is where the Strategy Design Pattern is used. 
+        self.rect.topleft = self.strategy_pattern.move()
+        self.image = self.images[self.strategy_pattern.change_index_frames()]
+
+class ObstalceSprite(CharacterSprite):
+    def update(self):
+        self.rect.topleft = self.strategy_pattern.move()
+        self.image = self.images[self.strategy_pattern.change_index_frames()]
 
 # Below are Updating Strategies.
 class UpdatingStrategy(ABC):
@@ -380,6 +391,23 @@ class DownwardsUpdating(UpdatingStrategy):
         self.reappear()
         return self.rect.topleft
 
+def create_obstacle(group, width = Settings.get_settings().width_screen):
+    import random
+
+    random_strategy = random.choice([LinearUpdating, SinoidUpdating])
+    random_height = random.randint(0, Settings.get_settings().height_screen-100)
+    
+    obstacle = ObstalceSprite(name_image='Python', 
+                      number_frames=2, 
+                      location_x=width, 
+                      location_y=random_height, 
+                      strategy_pattern = random_strategy, 
+                      groups = group, 
+                      velocity=random.randint(1,5), 
+                      is_facing_left=False)
+    obstacle.rescale_percentage(0.93)
+    
+    return obstacle
 
 if __name__ == "__main__":    
     game = Settings.get_settings()
@@ -392,64 +420,21 @@ if __name__ == "__main__":
         game.screen.blit(game.surface, (0, 0) )
 
     # These are the sprites that will be displayed on the screen.
-    python_sin = Sprite(name_image = 'python', 
-                    number_frames = 2,
-                    location_x = 100,
-                    location_y = 400, 
-                    strategy_pattern = SinoidUpdating, 
-                    groups = (obstaclesprites, allsprites), 
-                    velocity = 3,
-                    is_facing_left = False, 
-                    framespeed = 0.02)
-    python_sin.rescale_images(100, 100)
+
     
-    chick = Player(name_image = 'Chick', 
+    chick = PlayerSprite(name_image = 'Chick', 
                     number_frames = 3,
-                    location_x = 400,
-                    location_y = 600, 
+                    location_x = 0,
+                    location_y = 350, 
                     strategy_pattern = PlayerUpdating, 
                     groups = (allsprites),
                     velocity = 3,
                     is_facing_left = False, 
                     framespeed = 0.1)
-    chick.rescale_images(120, 120)
+    chick.rescale_percentage(0.91)
 
-    chick2 = Sprite(name_image = 'Chick',
-                   number_frames = 3,
-                   location_x = 400,
-                   location_y = 0, 
-                   strategy_pattern = UpwardsUpdating, 
-                   groups = (obstaclesprites, allsprites), 
-                   velocity = 5)
-    chick2.rescale_images(100, 100)
-
-    chick3 = Sprite(name_image = 'Chick',
-                   number_frames=1,
-                   location_x = 400,
-                   location_y = 0, 
-                   strategy_pattern = DownwardsUpdating, 
-                   groups = (obstaclesprites, allsprites), 
-                   velocity = 5)
-    chick3.rescale_images(100, 100)
-    
-    letterbird = Sprite(name_image='LetterBird',
-                        number_frames=7,
-                        location_x=200,
-                        location_y=200,
-                        strategy_pattern=BirdUpdating,
-                        groups=(obstaclesprites, allsprites),
-                        framespeed = 0.1,
-                        velocity=5)
-    
-    python = Sprite(name_image = 'python',
-                    number_frames = 2,
-                    location_x = 1200,
-                    location_y = 400,
-                    strategy_pattern = LinearUpdating, 
-                    groups = (obstaclesprites, allsprites),
-                    velocity = 3,
-                    framespeed=0.02)
-    python.rescale_images(100, 100)
+    for _ in range(5):
+        create_obstacle(width=random.randint(600, 1120), group=obstaclesprites)
 
     score = TextSprite(name_image = f'Score {game.score}', 
                         location_x = 0, 
@@ -473,7 +458,7 @@ if __name__ == "__main__":
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+                if event.key == pygame.K_SPACE:
                     if is_paused:
                         is_paused = False
                         print('f')
@@ -504,16 +489,15 @@ if __name__ == "__main__":
         #deleted_sprites = [enemy for enemy in obstaclesprites if enemy not in collision_obstacles]
 
         score.name_image = f'Score: {game.score}'
-        score.image = score.font.render(score.name_image, False, 'black')
 
         if collision_obstacles:
             #print("Player collided with an enemy!")
+            create_obstacle(group=obstaclesprites)
             chick.health -= 1
             health.name_image = f'Health: {chick.health}'
             health.image = health.font.render(health.name_image, False, 'black')
         
-        if chick.health == 0:
+        #if chick.health == 0:
             #running = False
-            game.update_csv()
-            running=False
-    
+            #game.update_csv()
+            #running=False 
