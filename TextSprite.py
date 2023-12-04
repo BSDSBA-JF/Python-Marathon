@@ -119,7 +119,7 @@ if __name__ == "__main__":
                         location_y = 427,
                         groups = (separatesprites))
     
-    background = pygame.image.load('/Users/jfv/Desktop/Serpent Sprint/Graphics/ChickBackground.png')
+    background = pygame.image.load('/Users/jfv/Desktop/Serpent Sprint/Graphics/Background/ChickBackground.png')
     
     running = True
 
