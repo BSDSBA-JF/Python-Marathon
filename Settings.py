@@ -7,7 +7,7 @@ Instead of having to write out the boilerplate code "pygame.init()..." in the ma
     "game = Settings.get_settings()
     game.start_game()"
 
-Creator: John Francis Y. Viray and Caitlin Elaine L. Sebastian
+Creator: John Francis Y. Viray and Rohan A. Sachdev
 """
 
 import pygame
@@ -40,13 +40,14 @@ class Settings():
             Settings.__instance  = Settings(width_screen = 1120, 
                                             height_screen = 700, 
                                             background_color = (255, 255, 255),
-                                            score = 0, 
+                                            score = 0,
+                                            health = 3, 
                                             fps = 30,
                                             name = '',
                                             mode = 'Easy')
         return Settings.__instance
     
-    def __init__(self, width_screen, height_screen, background_color, score, fps, name, mode):
+    def __init__(self, width_screen, height_screen, background_color, score, health, fps, name, mode):
         """
         Constructor creates the Settings object based on the width and height of the screen, the background color, and the frames-per-second (fps) of the game.
         """
@@ -60,6 +61,7 @@ class Settings():
         self.screen = pygame.display.set_mode((self.width_screen, self.height_screen))
         self.surface = pygame.Surface((width_screen, height_screen), pygame.SRCALPHA)
         self.score = score
+        self.health = health
         self.fps = fps
         self.name = name
         self.mode = mode
@@ -105,11 +107,46 @@ class Settings():
 
             writer.writerow([self.name, self.score, self.mode])
     
+    def read_csv():
+        import pandas as pd
+        df = pd.read_csv('PlayerScores.csv')
+
+        try:
+            choice = input("Do you want to see the scores of a Player or a Mode: ")
+            assert choice in ['Player', 'Mode'] 
+        except AssertionError:
+            print("Invalid choice given. Please input only either 'Player' or 'Mode'")
+
+        try:
+            if choice == 'Mode':
+                mode = input("Choose a Game mode (Easy, Medium, Hard, or Story): ")
+                assert mode in ['Easy', 'Medium', 'Hard', 'Story']
+                mode_data = df[df['Mode'] == mode]
+                print("Highest Score is " + str(mode_data['Score'].max()))
+                print("Mean Score is " + str(mode_data['Score'].mean()))
+                print("Median Score is " + str(mode_data['Score'].median()))
+        except AssertionError:
+            print("Invalid mode given. Please input 'Easy', 'Medium', 'Hard', or 'Story'")   
+
+        try:
+            if choice == 'Player':
+                player = input("Please put the name you used (Case Sensitive): ")
+                assert player in df['Name'].values
+                player_data = df[df['Name'] == player]
+                print("Highest Score is " + str(player_data['Score'].max()))
+                print("Mean Score is " + str(player_data['Score'].mean()))
+                print("Median Score is " + str(player_data['Score'].median()))
+        except AssertionError:
+            print("Invalid name given. He/She has not played the game.")
+    
 # This is to test out if the Settings class works as expected.
 if __name__ == "__main__":
+    Settings.get_settings().read_csv()
+    """
+    Settings.read_csv()
     game = Settings.get_settings()
     game.start_game()
     
     running = True
     while running:
-        game.make_basic_loop()
+        game.make_basic_loop()"""
