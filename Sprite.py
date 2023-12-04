@@ -6,14 +6,6 @@ Moreover, it has a subclass, PlayableSprite.
 By the name, instances of this class will focus on sprites such as the Text, PowerUp, Serpent, Bird, and Rope.
 
 Creator: John Francis Y. Viray, Bianca M. Manatad, and Caitlin Elaine L. Sebastian
-
-HIII BIANCSSS AND LINDSEY!!! Dapat mabasa mo na 'to pagkatapos sa all-upper case ko. This is for yall po and writing our paper orz
-There are four classes made by Pygame. They are: Surface, Rectangle, Sprite, and Group. I'll use the 'Mona Lisa' as an analogy.
-Think of the Surface class as the artpiece itself. It contains the actual images of our sprites.
-The Rectangle class is the canvas of the artpiece. Rectangles are mainly used so that you can move the sprites around. 
-    If you move the canvas, you move the artpiece too. If you move the Rectangle, you move the Surface and thus the image too.
-The Sprite class is the collection of both the Surface and the Rectangle. It is there just so that Pygame can organize and orient itself.
-Finally, the Group class is there to organize MANY Sprites. Think of it as the Louvre museum since it houses many paintings.
 """
 
 # Importing modules 
@@ -90,8 +82,11 @@ class CharacterSprite(ABC, pygame.sprite.Sprite):
         Because the images are usually larger than needed, it is more often that they will be sized down.
         
         Args:
-            percentage (int) : The percent decrease to the new file. For example, if you want to decrease the image by 99%, you put rescale_percentage(0.99)
+            percentage (int) : The percent decrease to the new file. 
+                               For example, if you want to decrease the image by 99%, you put rescale_percentage(0.99)
         """
+        assert percentage < 1, "Percentage has to be less than 1 since if greater, the width or height will become negative"
+
         for index in range(len(self.images)):
             new_width = (self.images[index].get_rect().width) * (1 - percentage)
             new_height = (self.images[index].get_rect().height) * (1 - percentage)
@@ -122,19 +117,22 @@ class PlayerSprite(CharacterSprite):
         """create_images() is a helper method that will append a list of images so that sprite can have a loopable animation with its frames."""
 
         # Create an integer list of indices that will start from 1 go to the maximum number of frames then back to 1
-        total_frames = self.number_frames * 2
-        
-        #this will create the 1 to number_frames
-        indices = [int(x) for x in range(1, self.number_frames+1)]
+        if self.number_frames != 1:
+            total_frames = self.number_frames * 2
+            
+            #this will create the 1 to number_frames
+            indices = [int(x) for x in range(1, self.number_frames+1)]
 
-        for i in range(self.number_frames-1, 1, -1):
-            indices.append(int(i))
+            for i in range(self.number_frames-1, 1, -1):
+                indices.append(int(i))
 
-        for i in range(self.number_frames+1, total_frames+1):
-            indices.append(int(i))
-        
-        for i in range(total_frames-1, self.number_frames+1, -1):
-            indices.append(int(i))
+            for i in range(self.number_frames+1, total_frames+1):
+                indices.append(int(i))
+            
+            for i in range(total_frames-1, self.number_frames+1, -1):
+                indices.append(int(i))
+        elif self.number_frames == 1:
+            indices = [1, 2]
 
         return indices
     
@@ -190,13 +188,20 @@ class UpdatingStrategy(ABC):
         # This rectangle is often used for collision detection and positioning the sprite on the screen.
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.location_x, self.location_y)
-    
+
+    @abstractmethod
+    def move(self):
+        """
+        Moves and updates the sprite. Since UpdatingStrategy is just an interface, there is no concrete implementation yet.
+        """
+        pass
+
     def change_index_frames(self):
         """Change the indices so that there is animation in the sprite"""
         self.index += self.framespeed
         
         # To loop the code. If self.index is greater than the length of self.images, the animation must loop
-        if self.index >= len(self.images):
+        if self.index > len(self.images):
             self.index = 0
             #self.up = not self.up
         return int(self.index)
@@ -245,12 +250,7 @@ class UpdatingStrategy(ABC):
             Settings.get_settings().score += 1
             #print('fourth case worked', random_height)
 
-    @abstractmethod
-    def move(self):
-        """
-        Moves and updates the sprite. Since UpdatingStrategy is just an interface, there is no concrete implementation yet.
-        """
-        pass
+
 
 class PlayerUpdating(UpdatingStrategy):
     """
@@ -394,7 +394,7 @@ class DownwardsUpdating(UpdatingStrategy):
 def create_obstacle(group, width = Settings.get_settings().width_screen):
     import random
 
-    random_strategy = random.choice([LinearUpdating, SinoidUpdating])
+    random_strategy = random.choice([LinearUpdating, SinoidUpdating, UpwardsUpdating])
     random_height = random.randint(0, Settings.get_settings().height_screen-100)
     
     obstacle = ObstalceSprite(name_image='Python', 
@@ -403,7 +403,7 @@ def create_obstacle(group, width = Settings.get_settings().width_screen):
                       location_y=random_height, 
                       strategy_pattern = random_strategy, 
                       groups = group, 
-                      velocity=random.randint(1,5), 
+                      velocity=random.randint(3,5), 
                       is_facing_left=False)
     obstacle.rescale_percentage(0.93)
     
@@ -411,6 +411,7 @@ def create_obstacle(group, width = Settings.get_settings().width_screen):
 
 if __name__ == "__main__":    
     game = Settings.get_settings()
+    game.start_game()
     obstaclesprites = pygame.sprite.Group()
     textsprites = pygame.sprite.Group()
     allsprites = pygame.sprite.Group()
@@ -419,11 +420,13 @@ if __name__ == "__main__":
         pygame.draw.rect(game.surface, (128, 128, 128, 150), [0, 0, Settings.get_settings().width_screen, Settings.get_settings().height_screen ])
         game.screen.blit(game.surface, (0, 0) )
 
+
+
     # These are the sprites that will be displayed on the screen.
 
     
-    chick = PlayerSprite(name_image = 'Chick', 
-                    number_frames = 3,
+    chick = PlayerSprite(name_image = 'Frog', 
+                    number_frames = 2,
                     location_x = 0,
                     location_y = 350, 
                     strategy_pattern = PlayerUpdating, 
